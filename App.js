@@ -20,15 +20,6 @@ export default class App extends React.Component {
    ...initialState
   };
 
-  groups = {
-    "4": "Etapa 1",
-    "0": "Etapa 2",
-    "2": "Etapa 3",
-    "3": "Etapa 4",
-    "1": "Etapa 5",
-    
-  }
-
   async componentDidMount() {
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
     console.log(status)
@@ -50,7 +41,7 @@ export default class App extends React.Component {
     if (this.camera) {
       let photo = await this.camera.takePictureAsync();
       if (photo) {
-        //console.log("photo: ", photo)
+        console.log("photo: ", photo)
         this.setState({ imageuri: photo.uri });
       }
     }
@@ -63,8 +54,9 @@ export default class App extends React.Component {
 
   upload = async () => {
     this.setState({loading: true})
+    console.log(this.state.imageuri)
     let imageBase64 = await FileSystem.readAsStringAsync(this.state.imageuri, {encoding: FileSystem.EncodingType.Base64})
-    axios.post('http://192.168.0.12:5000/api/classifier', 
+    axios.post('http://192.168.0.13:5000/api/classifier', 
       { base64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        : imageBase64 })
       .then((response)=> {
         console.log(response.data);
@@ -135,8 +127,6 @@ export default class App extends React.Component {
               {
               Object.keys(this.state.res).length > 0 ? (
                 <View style={styles.resultsView}>
-                  <Text style={styles.resultText}> { this.groups[this.state.res["group"]] }</Text>
-                  <Text style={styles.resultText}> - </Text>
                   <Text style={styles.resultText}> Días restantes: { this.state.res["days_lower"] === this.state.res["days_higher"] || Number(this.state.res["days_lower"]) === 0 ? this.state.res["days_higher"] : `${this.state.res["days_lower"]} - ${this.state.res["days_higher"]}` }  </Text>
                 </View>
 
@@ -221,9 +211,9 @@ const styles = StyleSheet.create({
     padding: 5
   },
   cameraView: {
-    marginTop: 50,
+    marginTop: 150,
     height: 550,
-    width: 350,
+    width: 400,
     backgroundColor: "#000",
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
@@ -231,8 +221,8 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   camera: {
-    height: 550,
-    width: 350,
+    height: 700,
+    width: 400,
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center"
@@ -272,7 +262,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: 10,
     borderRadius: 5,
-    width: 100,
+    width: 200,
   },
   
   buttonText: {
@@ -290,7 +280,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: 10,
     borderRadius: 5,
-    width: 55,
+    width: 75,
     height: 75,
   },
   onScreenButtonText:{
@@ -323,13 +313,14 @@ const styles = StyleSheet.create({
     width: "90%",
   },
   buttonsView: {
+    marginTop: 50,
     height: 100,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
   },
   uploadedImage: {
-    height: 500,
+    height: 700,
     width: 350,
     padding: 10
   }
