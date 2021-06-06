@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import {ActivityIndicator,  StyleSheet, Text, View, Switch, TouchableOpacity, Image } from "react-native";
+import {ActivityIndicator,  StyleSheet, Text, View, Switch, TouchableOpacity, Image, ImageBackground } from "react-native";
 import * as Permissions from 'expo-permissions'
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera'
@@ -22,7 +22,6 @@ export default class App extends React.Component {
 
   async componentDidMount() {
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
-    console.log(status)
     this.setState({ hasCameraPermission: status === "granted" });
   }
 
@@ -41,7 +40,6 @@ export default class App extends React.Component {
     if (this.camera) {
       let photo = await this.camera.takePictureAsync();
       if (photo) {
-        console.log("photo: ", photo)
         this.setState({ imageuri: photo.uri });
       }
     }
@@ -54,17 +52,15 @@ export default class App extends React.Component {
 
   upload = async () => {
     this.setState({loading: true})
-    console.log(this.state.imageuri)
     let imageBase64 = await FileSystem.readAsStringAsync(this.state.imageuri, {encoding: FileSystem.EncodingType.Base64})
     axios.post('http://192.168.0.13:5000/api/classifier', 
       { base64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        : imageBase64 })
       .then((response)=> {
-        console.log(response.data);
         this.setState({res: response.data})
         this.setState({loading: false})
       })
       .catch((error)=>{
-        console.log("error: ", error);
+        console.error("error: ", error);
         this.setState({loading: false})
     })
   };
@@ -85,13 +81,33 @@ export default class App extends React.Component {
           {this.state.switchValue ? (
             <View style={styles.cameraView}>
               {this.state.imageuri != "" ? (
-                <Image
+                <ImageBackground
                   source={{
                     uri: this.state.imageuri
                   }}
                   style={styles.uploadedImage}
                   resizeMode="contain"
-                />
+                >
+                  <View style={styles.uploadedImageCenter}/>
+                  {
+                    Object.keys(this.state.res).length > 0 ? (
+                      <View style={styles.resultsView}>
+                        <Text style={styles.resultText}> Días restantes: { this.state.res["days_lower"] === this.state.res["days_higher"] || Number(this.state.res["days_lower"]) === 0 ? this.state.res["days_higher"] : `${this.state.res["days_lower"]} - ${this.state.res["days_higher"]}` }  </Text>
+                      </View>
+
+                    ) : (
+                      <Fragment>
+                        {
+                          this.state.loading &&
+                          <View style={styles.resultsLoaderView}>
+                              <ActivityIndicator size="large" color="#FFF" />
+                          </View> 
+                        }
+                            
+                      </Fragment>
+                    )
+              }
+                  </ImageBackground>
               ) : (
                 <Camera
                   style={styles.camera}
@@ -111,6 +127,7 @@ export default class App extends React.Component {
                         Flip
                       </Text>
                     </TouchableOpacity>
+                    <View style={styles.cameraCenter}/>
                   </View>
                 </Camera>
               )}
@@ -124,24 +141,6 @@ export default class App extends React.Component {
             </View>
           )}
             <Fragment>
-              {
-              Object.keys(this.state.res).length > 0 ? (
-                <View style={styles.resultsView}>
-                  <Text style={styles.resultText}> Días restantes: { this.state.res["days_lower"] === this.state.res["days_higher"] || Number(this.state.res["days_lower"]) === 0 ? this.state.res["days_higher"] : `${this.state.res["days_lower"]} - ${this.state.res["days_higher"]}` }  </Text>
-                </View>
-
-              ) : (
-                <Fragment>
-                  {
-                    this.state.loading &&
-                    <View style={styles.resultsLoaderView}>
-                        <ActivityIndicator size="large" color="#FFF" />
-                    </View> 
-                  }
-                      
-                </Fragment>
-              )
-              }
               <View style={styles.buttonsView}>
               {this.state.imageuri == "" ? (
                 <View style={styles.captureButtonView}>
@@ -211,9 +210,9 @@ const styles = StyleSheet.create({
     padding: 5
   },
   cameraView: {
-    marginTop: 150,
-    height: 550,
-    width: 400,
+    minWidth: 400,
+    minHeight: 700,
+    marginTop: 50,
     backgroundColor: "#000",
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
@@ -225,19 +224,17 @@ const styles = StyleSheet.create({
     width: 400,
     borderRadius: 5,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   resultsView:{
-    width: 350,
     display: 'flex',
     flexDirection: 'row',
+    alignSelf: 'flex-end',
     alignItems: 'center',
     justifyContent: 'center',
     color: "#FFF",
-    borderColor: "#FFF",
-    borderWidth: 2,
     borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5
+    borderBottomRightRadius: 5, 
   },
   resultText: {
     fontSize: 20,
@@ -283,6 +280,13 @@ const styles = StyleSheet.create({
     width: 75,
     height: 75,
   },
+  cameraCenter: {
+    borderColor: "#FFFFFF80",
+    borderWidth: 2,
+    width: 75,
+    height: 130,
+    marginTop: 235,
+  },
   onScreenButtonText:{
     fontSize: 18,
     color: "#FFF",
@@ -295,12 +299,13 @@ const styles = StyleSheet.create({
   postCaptureView:{
     flexDirection: "row",
     justifyContent: "center",
-    width: "100%",
+    
   },
   postCaptureButtonView: {
     width: '50%',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 1
   },
   postCameraButtons:{
     alignItems: 'center',
@@ -313,15 +318,22 @@ const styles = StyleSheet.create({
     width: "90%",
   },
   buttonsView: {
-    marginTop: 50,
     height: 100,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
   },
   uploadedImage: {
-    height: 700,
-    width: 350,
-    padding: 10
-  }
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 400,
+    minHeight: 700,
+  },
+  uploadedImageCenter: {
+    borderColor: "#FFFFFF80",
+    borderWidth: 2,
+    width: 75,
+    height: 130,
+  },
 });
