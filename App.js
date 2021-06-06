@@ -88,7 +88,7 @@ export default class App extends React.Component {
                   style={styles.uploadedImage}
                   resizeMode="contain"
                 >
-                  <View style={styles.uploadedImageCenter}/>
+                  
                   {
                     Object.keys(this.state.res).length > 0 ? (
                       <View style={styles.resultsView}>
@@ -229,9 +229,8 @@ const styles = StyleSheet.create({
   resultsView:{
     display: 'flex',
     flexDirection: 'row',
-    alignSelf: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 'auto',
     color: "#FFF",
     borderBottomLeftRadius: 5,
     borderBottomRightRadius: 5, 
@@ -239,13 +238,12 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 20,
     padding: 5,
-    color: "#FFF"
+    color: "#FFF",
+    backgroundColor: "#00000080"
   },
   resultsLoaderView:{
     width: 350,
     alignItems: 'center',
-    justifyContent: 'center'
-
   },
   cameraButtonView: {
     height: "100%",
@@ -304,8 +302,7 @@ const styles = StyleSheet.create({
   postCaptureButtonView: {
     width: '50%',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 1
+    justifyContent: 'center',
   },
   postCameraButtons:{
     alignItems: 'center',
